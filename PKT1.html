@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Evaluation Tool</title>
+
+  <!-- =====================
+       BASIC PAGE STYLES
+       ===================== -->
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+    }
+
+    .page {
+      display: flex;
+      height: calc(100vh - 72px); /* accounts for header height */
+    }
+
+    /* LEFT PANEL (MEDIA + PROMPT) */
+    .left {
+      width: 70%;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    /* RIGHT PANEL (FORM) */
+    .right {
+      width: 30%;
+      background: #ffffff;
+      border-left: 1px solid #ddd;
+      overflow-y: auto;
+    }
+
+    .question-box {
+      background: white;
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      margin-bottom: 12px;
+      padding: 10px;
+      resize: none;
+    }
+
+    .media-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .media-box {
+      flex: 1;
+      border: 2px dashed #ccc;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .media-box img,
+    .media-box video {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    fieldset {
+      border: none;
+      margin-bottom: 14px;
+    }
+
+    legend {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* MOBILE SUPPORT */
+    @media (max-width: 900px) {
+      .page {
+        flex-direction: column;
+      }
+      .left, .right {
+        width: 100%;
+      }
+      .media-row {
+        flex-direction: column;
+      }
+    }
+    /* Page Header */
+    .page-header {
+      background: #ffffff;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: center;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .page-header h2 {
+      margin: 4px 0 0;
+      font-size: 16px;
+      font-weight: 500;
+      color: #6b7280;
+    }
+    /* Header layout */
+    .page-header {
+      background: #ffffff;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .header-left h2 {
+      margin: 4px 0 0;
+      font-size: 16px;
+      font-weight: 500;
+      color: #6b7280;
+    }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #d1d5db;
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      top: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .toggle input:checked + .slider {
+      background-color: #2563eb;
+    }
+
+    .toggle input:checked + .slider::before {
+      transform: translateX(20px);
+    }
+
+    /* -------------------
+       DARK MODE STYLES
+       ------------------- */
+    /* class 'dark' is added dynamically via JavaScript */
+    body.dark {
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    body.dark .page-header {
+      background: #020617;
+      border-bottom-color: #1e293b;
+    }
+
+    body.dark .header-left h1 {
+      color: #f9fafb;
+    }
+
+    body.dark .header-left h2 {
+      color: #9ca3af;
+    }
+
+    body.dark .left,
+    body.dark .right,
+    body.dark .question-box {
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    body.dark textarea,
+    body.dark input,
+    body.dark fieldset {
+      background: #020617;
+      color: #e5e7eb;
+      border-color: #334155;
+    }
+
+    body.dark .media-box {
+      background: #020617;
+      border-color: #334155;
+    }
+
+    /* Dark mode icons */
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-icon {
+      font-size: 16px;
+      line-height: 1;
+      user-select: none;
+    }
+
+    body.dark .mode-icon:first-child {
+      opacity: 0.3;
+    }
+    /* class 'dark' is added dynamically via JavaScript */
+    body:not(.dark) .mode-icon:last-child {
+      opacity: 0.3;
+    }
+
+  </style>
+</head>
+
+<body>
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="header-left">
+    <h1>Shopstream - PKT 1</h1>
+  </div>
+
+  <div class="header-right">
+    <span class="mode-icon">🌞</span>
+
+    <label class="toggle">
+      <input type="checkbox" id="darkModeToggle">
+      <span class="slider"></span>
+    </label>
+
+    <span class="mode-icon">🌙</span>
+  </div>
+
+</div>
+
+
+<div class="page">
+
+  <!-- =====================
+       LEFT PANEL
+       ===================== -->
+  <div class="left">
+    <div class="question-box">
+      <h3 id="questionTitle"></h3>
+
+      <!-- Prompt text -->
+      <label for="promptBox"></label><textarea id="promptBox" readonly></textarea>
+
+      <!-- Media -->
+      <div class="media-row">
+        <div class="media-box">
+          <img id="questionImage" alt="Missing Image" src="">
+        </div>
+        <div class="media-box">
+          <video id="questionVideo" controls>
+            <source id="questionVideoSrc" type="video/mp4" src="">
+          </video>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================
+       RIGHT PANEL
+       ===================== -->
+  <div class="right">
+
+    <!-- PROGRESS BAR -->
+    <div style="padding:16px">
+      <div id="progressText"></div>
+      <div style="background:#ddd;height:8px;border-radius:4px;">
+        <div id="progressBar" style="height:8px;width:0;background:#2563eb;"></div>
+      </div>
+    </div>
+
+    <!-- FORM -->
+    <form id="evaluationForm" style="padding:16px">
+
+      <!-- USER DETAILS (ONLY PAGE 1) -->
+      <div id="userInfo">
+        <h3>User Details</h3>
+        <label for="employeeId"></label><input id="employeeId" placeholder="Employee ID" required><br><br>
+        <label for="name"></label><input id="name" placeholder="Name" required><br><br>
+        <label for="email"></label><input id="email" type="email" placeholder="Email" required><br><br>
+      </div>
+
+      <h3>Evaluation</h3>
+
+      <!-- QUESTIONS WILL BE GENERATED HERE -->
+      <div id="questions"></div>
+
+      <button type="submit">Submit & Next</button>
+    </form>
+  </div>
+</div>
+
+<!-- =====================
+     JAVASCRIPT LOGIC
+     ===================== -->
+<script>
+
+  /* -------------------------
+     BASIC PAGE SETUP
+     ------------------------- */
+  const TOTAL_PAGES = 10;
+  const params = new URLSearchParams(window.location.search);
+  const page = parseInt(params.get("page") || "1");
+
+  document.getElementById("progressText").innerText =
+          `Page ${page} of ${TOTAL_PAGES}`;
+  document.getElementById("progressBar").style.width =
+          `${(page / TOTAL_PAGES) * 100}%`;
+
+  /* -------------------------
+     PAGE CONTENT (MEDIA)
+     ------------------------- */
+  const pageContent = {
+    1:{title:"Question 1",prompt:"Compare clarity",image:"assets/image1.jpg",video:"assets/video1.mp4"},
+    2:{title:"Question 2",prompt:"Compare motion",image:"assets/image2.jpg",video:"assets/video2.mp4"},
+    3:{title:"Question 3",prompt:"Compare lighting",image:"assets/image3.jpg",video:"assets/video3.mp4"},
+    4:{title:"Question 4",prompt:"Compare artifacts",image:"assets/image4.jpg",video:"assets/video4.mp4"},
+    5:{title:"Question 5",prompt:"Compare sharpness",image:"assets/image5.jpg",video:"assets/video5.mp4"},
+    6:{title:"Question 6",prompt:"Compare color accuracy",image:"assets/image6.jpg",video:"assets/video6.mp4"},
+    7:{title:"Question 7",prompt:"Compare noise",image:"assets/image7.jpg",video:"assets/video7.mp4"},
+    8:{title:"Question 8",prompt:"Compare realism",image:"assets/image8.jpg",video:"assets/video8.mp4"},
+    9:{title:"Question 9",prompt:"Compare stability",image:"assets/image9.jpg",video:"assets/video9.mp4"},
+    10:{title:"Question 10",prompt:"Overall comparison",image:"assets/image10.jpg",video:"assets/video10.mp4"}
+  };
+
+  const c = pageContent[page];
+  document.getElementById("questionTitle").innerText = c.title;
+  document.getElementById("promptBox").value = c.prompt;
+  document.getElementById("questionImage").src = c.image;
+  document.getElementById("questionVideoSrc").src = c.video;
+  document.getElementById("questionVideo").load();
+
+  /* Hide user info after page 1 */
+  if (page > 1) {
+    const userInfo = document.getElementById("userInfo");
+    userInfo.style.display = "none";
+
+    // 🔥 VERY IMPORTANT: remove required validation
+    document.getElementById("employeeId").required = false;
+    document.getElementById("name").required = false;
+    document.getElementById("email").required = false;
+  }
+
+  /* -------------------------
+     19 CUSTOM QUESTIONS
+     ------------------------- */
+  const questions = [ /* EXACT QUESTIONS YOU PROVIDED */
+    {type:"radio",text:"Is the video unratable?",options:["Input image is missing","Input image is incomprehensible","Input prompt is missing / incomprehensible","Output video missing","Output video is incomprehensible","Input prompt is in foreign language","Input image or output video partially loaded","No Issue"]},
+    {type:"radio",text:"Does the prompt or video contain any non-family safe / inappropriate content?",options:["Yes","No"]},
+    {type:"radio",text:"Is there no change, or only minimal change between the input image and output video?",options:["No change between image and video","Minimal change between image and video","Acceptable change (No issue)"]},
+    {type:"radio",text:"Where there is significant change between the image video, is there Misalignment with OR without issues?",options:["Misalignment with issues","Misalignment with NO issues / Negative outcome","No issue"]},
+    {type:"checkbox",text:"Are there any distortions?",options:["Original Object is Distorted","Object Extension is Distorted","New Object was Added","Background Distortion","Border And Frames Distortion","Other Distortion","No Distortion"]},
+    {type:"radio",text:"Are there any object distortions? (For Apparel Only)",options:["Flag","No Flag","Not applicable"]},
+    {type:"checkbox",text:"Are there any distortion of primary object (product)? (For Apparel Only)",options:["Loss or Misrepresentation of Apparel Details","Texture and Pattern Degradation","Deformation of Apparel Structure","No Distortion","Not applicable"]},
+    {type:"checkbox",text:"Are there any distortion of human? (For Apparel Only)",options:["Unnatural Limb or Body Part Distortion","Missing/Adding Body Part","No Distortion","Not applicable"]},
+    {type:"radio",text:"Are there any misrepresentations? (extension focus)",options:["Object Misrepresentation","Background Misrepresentation","Borders And Frames Misrepresentation","Other Misrepresentation","No Misrepresentation"]},
+    {type:"radio",text:"Are there any object or background misrepresentation, is it Unexpected or Expected?",options:["Unexpected","Expected","Not applicable"]},
+    {type:"radio",text:"Are there any elements that are unfounded or completely new generations?",options:["New Object","New Color, Spot, Bar Or Light2","New Borders/Padding","New Background","Other New Unfounded Generation","No Issue"]},
+    {type:"radio",text:"Is there any pixelation or blurry issues?",options:["Foreground object","Background object","General Background","No Issue"]},
+    {type:"radio",text:"If pixelated / blurry is selected for issue, please choose the answer below",options:["Output video is more pixelated / blurry than source input image","Pixelation / blurriness are the exact same as the source input image","No Issue"]},
+    {type:"checkbox",text:"Is there any color or contrast change?",options:["Foreground object","Background object","General background","No Issue"]},
+    {type:"checkbox",text:"Is there any unnatural / awkward, or abrupt motion, pacing, or transitions?",options:["Scene Flickering/Abruptness","Unnatural Objects/People","Unnatural Movement","Too Fast or Slow","Other","No Issue"]},
+    {type:"radio",text:"Is there any unnatural / awkward, or abrupt motion, pacing, or transitions? (For Apparel Only)",options:["Unnatural/awkward human movement","Unnatural Movement of Fabric","No Issue","Not applicable"]},
+    {type:"checkbox",text:"Is there any Awkward Viewpoints, Placements, Or Orientations?",options:["Off center","Awkward orientation","Extreme Close-up","Blocking/Overlapping content","Other view/placement issue","No Issue"]},
+    {type:"radio",text:"Is there any unrealistic, nonsensical, or absurd content or situation in the output?",options:["Flag","No Flag"]},
+    {type:"radio",text:"Does the rendering contain any other issue that does not fall in any of the above categories?",options:["Flag","No Flag"]}
+  ];
+
+  /* -------------------------
+     RENDER QUESTIONS
+     ------------------------- */
+  const qBox = document.getElementById("questions");
+
+  questions.forEach((q, i) => {
+    let html = `<fieldset><legend>Q${i+1}. ${q.text}</legend>`;
+    q.options.forEach((opt, optIndex) => {
+
+      // 👉 Make ALL radio groups required
+      const requiredAttr =
+              q.type === "radio" && optIndex === 0 ? "required" : "";
+
+      html += `<label>
+    <input type="${q.type}" name="q${i+1}" value="${opt}" ${requiredAttr}>
+    ${opt}
+  </label><br>`;
+    });
+
+    html += `</fieldset>`;
+    qBox.innerHTML += html;
+  });
+
+  /* -------------------------
+     FORM SUBMISSION
+     ------------------------- */
+  document.getElementById("evaluationForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    // 🔒 Disable submit button to prevent multiple clicks
+    const submitBtn = document.querySelector("#evaluationForm button[type='submit']");
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Submitting...";
+
+    alert("Submit started");
+
+    const employeeIdInput = document.getElementById("employeeId");
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+
+    if (page === 1) {
+      sessionStorage.setItem("employeeId", employeeIdInput.value);
+      sessionStorage.setItem("name", nameInput.value);
+      sessionStorage.setItem("email", emailInput.value);
+    }
+
+    const payload = {
+      employeeId: sessionStorage.getItem("employeeId"),
+      name: sessionStorage.getItem("name"),
+      email: sessionStorage.getItem("email"),
+      page
+    };
+
+    for (let i = 1; i <= 19; i++) {
+      payload[`q${i}`] = [...document.querySelectorAll(`[name="q${i}"]:checked`)]
+              .map(x => x.value)
+              .join(", ");
+    }
+
+    alert("Payload built. Sending request…");
+
+    const res = await fetch("https://script.google.com/macros/s/AKfycbwwek8tjP3aelvmeG12UMOSxf0R1MsVyWAX5uTOHuW6VRO04dEoqrg_lqMcIpGQZI8uPA/exec", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+    alert("Response: " + JSON.stringify(result));
+
+    if (result.status !== "success") return;
+
+    // 🛑 STOP after last page
+    if (page === TOTAL_PAGES) {
+      alert("Thank you! Evaluation completed.");
+      // Replace entire page with Thank You UI
+      document.body.innerHTML = `
+    <div style="
+      display:flex;
+      height:100vh;
+      align-items:center;
+      justify-content:center;
+      background:#f5f7fb;
+      font-family: Arial, sans-serif;
+    ">
+      <div style="
+        background:#ffffff;
+        padding:40px 50px;
+        border-radius:14px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.15);
+        text-align:center;
+        max-width:500px;
+      ">
+        <h1 style="margin-bottom:10px;">Thank You 🙏</h1>
+        <p style="font-size:16px; color:#444;">
+          Your evaluation has been successfully submitted.
+        </p>
+        <p style="font-size:14px; color:#777; margin-top:10px;">
+          You may now close this window.
+        </p>
+      </div>
+    </div>
+  `;
+
+      // Optional: clear session data
+      sessionStorage.clear();
+      return;
+    }
+
+// ➡️ Go to next page only if not last
+    const nextPage = page + 1;
+    const baseUrl = window.location.href.split("?")[0];
+    window.location.href = `${baseUrl}?page=${nextPage}`;
+
+  });
+  // -------------------------
+  // DARK MODE TOGGLE LOGIC
+  // -------------------------
+  const toggle = document.getElementById("darkModeToggle");
+
+  // Load saved preference
+  if (localStorage.getItem("darkMode") === "on") {
+    document.body.classList.add("dark");
+    toggle.checked = true;
+  }
+
+  // Toggle dark mode
+  toggle.addEventListener("change", () => {
+    if (toggle.checked) {
+      document.body.classList.add("dark");
+      localStorage.setItem("darkMode", "on");
+    } else {
+      document.body.classList.remove("dark");
+      localStorage.setItem("darkMode", "off");
+    }
+  });
+
+</script>
+</body>
+</html>
